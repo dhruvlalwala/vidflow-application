@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-gray-900/95">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if title %}{{ title }} - VidFlow{% else %}VidFlow{% endif %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS for Glassmorphism, Gradients, and Scrollbars -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <script>
+        // Tailwind CSS Configuration
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full text-gray-200 bg-dots-pattern">
+
+    <div id="app-wrapper" class="flex h-full">
+        <!-- Desktop Sidebar with Glassmorphism -->
+        <aside class="hidden md:flex md:flex-shrink-0">
+            <div class="flex w-20 hover:w-64 transition-all duration-300 ease-in-out flex-col group">
+                <div class="flex flex-col flex-grow border-r border-white/10 bg-black/50 backdrop-blur-xl pt-5 pb-4 overflow-y-auto">
+                    <div class="flex flex-shrink-0 items-center px-6 mb-8">
+                        <h1 class="text-2xl font-extrabold text-white tracking-wider bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">V</h1>
+                        <h1 class="text-2xl font-extrabold text-white tracking-wider opacity-0 group-hover:opacity-100 transition-opacity duration-200">idFlow</h1>
+                    </div>
+                    <div class="mt-5 flex flex-1 flex-col">
+                        <nav class="flex-1 space-y-2 px-4">
+                            {% if current_user.is_authenticated %}
+                                {% set active_page = request.endpoint %}
+                                <!-- Navigation Links -->
+                                <a href="{{ url_for('main.feed') }}" class="group flex items-center rounded-lg p-2 text-base font-medium {% if 'feed' in active_page %} bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg {% else %} text-gray-300 hover:bg-white/10 hover:text-white {% endif %}">
+                                    <svg class="mr-4 h-6 w-6 flex-shrink-0 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                                    <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-200">Home</span>
+                                </a>
+                                <a href="{{ url_for('main.search') }}" class="group flex items-center rounded-lg p-2 text-base font-medium {% if 'search' in active_page %} bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg {% else %} text-gray-300 hover:bg-white/10 hover:text-white {% endif %}">
+                                    <svg class="mr-4 h-6 w-6 flex-shrink-0 transition-transform group-hover:scale-110" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                    <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-200">Search</span>
+                                </a>
+                                <a href="{{ url_for('main.notifications') }}" class="group relative flex items-center rounded-lg p-2 text-base font-medium {% if 'notifications' in active_page %} bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg {% else %} text-gray-300 hover:bg-white/10 hover:text-white {% endif %}">
+                                    <svg class="mr-4 h-6 w-6 flex-shrink-0 transition-transform group-hover:scale-110" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                                    <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-200">Notifications</span>
+                                    {% set unread_count = current_user.unread_notifications_count() %}
+                                    {% if unread_count > 0 %}
+                                    <span class="absolute top-1 left-8 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">{{ unread_count }}</span>
+                                    {% endif %}
+                                </a>
+                                <a href="{{ url_for('main.direct_inbox') }}" class="group flex items-center rounded-lg p-2 text-base font-medium {% if 'direct_inbox' in active_page or 'messages' in active_page %} bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg {% else %} text-gray-300 hover:bg-white/10 hover:text-white {% endif %}">
+                                    <svg class="mr-4 h-6 w-6 flex-shrink-0 transition-transform group-hover:scale-110" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                                    <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-200">Messages</span>
+                                </a>
+                                
+                                <!-- NEW: Show upload links only to creators -->
+                                {% if current_user.role == 'creator' %}
+                                <a href="{{ url_for('main.upload_post') }}" class="group flex items-center rounded-lg p-2 text-base font-medium {% if 'upload_post' in active_page %} bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg {% else %} text-gray-300 hover:bg-white/10 hover:text-white {% endif %}">
+                                    <svg class="mr-4 h-6 w-6 flex-shrink-0 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-200">Create</span>
+                                </a>
+                                {% endif %}
+                                
+                                <a href="{{ url_for('main.profile', username=current_user.username) }}" class="group flex items-center rounded-lg p-2 text-base font-medium {% if 'profile' in active_page %} bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg {% else %} text-gray-300 hover:bg-white/10 hover:text-white {% endif %}">
+                                    <img class="mr-4 h-6 w-6 rounded-full object-cover transition-transform group-hover:scale-110" src="{{ url_for('static', filename='profile_pics/' + current_user.profile_pic) }}" alt="">
+                                    <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-200">Profile</span>
+                                </a>
+                            {% endif %}
+                        </nav>
+                    </div>
+                    {% if current_user.is_authenticated %}
+                       <div class="flex-shrink-0 block w-full px-4">
+                            <a href="{{ url_for('main.logout') }}" class="group flex items-center rounded-lg p-2 text-base font-medium text-gray-400 hover:bg-white/10 hover:text-white">
+                                <svg class="mr-4 h-6 w-6 flex-shrink-0 transition-transform group-hover:scale-110" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                                <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-200">Logout</span>
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
+            <!-- Header for All Screens -->
+            <header class="sticky top-0 z-40 flex h-16 flex-shrink-0 items-center gap-x-4 border-b border-white/10 bg-black/80 backdrop-blur-lg px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+                <div class="flex items-center gap-x-2">
+                       <h1 class="text-xl font-extrabold text-white tracking-wider bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">VIDFLOW</h1>
+                       {% if title %}
+                       <span class="text-gray-500">/</span>
+                       <h2 class="text-lg font-semibold text-white">{{ title }}</h2>
+                       {% endif %}
+                </div>
+            </header>
+               <main class="flex-1 overflow-y-auto" id="main-content">
+                <div class="px-4 py-8 sm:px-6 lg:px-8">
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+        </div>
+
+        <!-- Mobile Bottom Nav -->
+        {% if current_user.is_authenticated %}
+        <nav class="md:hidden fixed bottom-0 inset-x-0 bg-black/80 backdrop-blur-lg border-t border-white/10 z-50">
+            <div class="flex justify-around items-center h-16">
+                <a href="{{ url_for('main.feed') }}" class="p-3 {% if 'feed' in active_page %} text-white {% else %} text-gray-400 hover:text-white {% endif %}">
+                    <svg class="h-7 w-7" fill="{% if 'feed' in active_page %}currentColor{% else %}none{% endif %}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                </a>
+                <a href="{{ url_for('main.search') }}" class="p-3 {% if 'search' in active_page %} text-white {% else %} text-gray-400 hover:text-white {% endif %}">
+                    <svg class="h-7 w-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </a>
+                <a href="{{ url_for('main.notifications') }}" class="relative p-3 {% if 'notifications' in active_page %} text-white {% else %} text-gray-400 hover:text-white {% endif %}">
+                    <svg class="h-7 w-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    {% if unread_count > 0 %}
+                    <span class="absolute top-2 right-2 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-gray-800"></span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('main.direct_inbox') }}" class="p-3 {% if 'direct_inbox' in active_page or 'messages' in active_page %} text-white {% else %} text-gray-400 hover:text-white {% endif %}">
+                    <svg class="h-7 w-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                </a>
+                <a href="{{ url_for('main.profile', username=current_user.username) }}" class="p-2">
+                    <img class="h-8 w-8 rounded-full object-cover {% if 'profile' in active_page %} ring-2 ring-white {% endif %}" src="{{ url_for('static', filename='profile_pics/' + current_user.profile_pic) }}" alt="Profile">
+                </a>
+            </div>
+        </nav>
+        {% endif %}
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-[100] space-y-3 w-full max-w-xs">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    {% include '_toast.html' %}
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+
+</body>
+</html>

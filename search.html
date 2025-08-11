@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-xl mx-auto">
+    <h1 class="text-2xl font-bold text-white mb-6">Search for Users</h1>
+
+    <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+        <input type="text" id="user-search-input" placeholder="Start typing a username..."
+               class="block w-full rounded-md border-0 py-3 pl-10 bg-white/5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-purple-500 sm:text-sm sm:leading-6 transition">
+    </div>
+
+    <!-- Search Results Container -->
+    <div id="search-results-container" class="mt-6 space-y-2">
+        <!-- Results will be dynamically inserted here by JavaScript -->
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('user-search-input');
+    const resultsContainer = document.getElementById('search-results-container');
+    let debounceTimer;
+
+    searchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+
+        // Clear the previous timer
+        clearTimeout(debounceTimer);
+
+        if (query.length === 0) {
+            resultsContainer.innerHTML = '';
+            return;
+        }
+
+        // Set a new timer to avoid sending requests on every keystroke
+        debounceTimer = setTimeout(() => {
+            fetch(`/api/search_users?query=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    resultsContainer.innerHTML = ''; // Clear previous results
+                    if (data.length > 0) {
+                        data.forEach(user => {
+                            const userElement = document.createElement('a');
+                            userElement.href = `/profile/${user.username}`;
+                            userElement.className = 'flex items-center space-x-3 p-3 bg-black/50 hover:bg-white/10 rounded-lg transition duration-200';
+                            userElement.innerHTML = `
+                                <img src="${user.profile_pic}" alt="${user.username}" class="w-12 h-12 rounded-full object-cover">
+                                <span class="font-semibold text-white">${user.username}</span>
+                            `;
+                            resultsContainer.appendChild(userElement);
+                        });
+                    } else {
+                        resultsContainer.innerHTML = '<p class="text-gray-400 text-center py-4">No users found.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching search results:', error);
+                    resultsContainer.innerHTML = '<p class="text-red-400 text-center py-4">Error loading results.</p>';
+                });
+        }, 300); // 300ms delay
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="flex min-h-full flex-col justify-center items-center px-6 py-12 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-lg">
+        <h2 class="text-center text-2xl font-bold leading-9 tracking-tight text-white">
+            Create a new story
+        </h2>
+        <p class="mt-2 text-center text-sm text-gray-400">
+            Your story will be visible for 24 hours.
+        </p>
+    </div>
+
+    <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-lg">
+        <div class="bg-black/50 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-8">
+            <form class="space-y-6" action="{{ url_for('main.upload_story') }}" method="POST" enctype="multipart/form-data">
+                <div>
+                    <label for="file" class="block text-sm font-medium leading-6 text-gray-300">Select Image or Video</label>
+                    <div class="mt-2">
+                        <input id="file" name="file" type="file" required accept="image/*,video/*"
+                               class="block w-full text-sm text-gray-400 rounded-md border-0 bg-white/5 ring-1 ring-inset ring-white/10
+                                      file:mr-4 file:py-2 file:px-4
+                                      file:rounded-md file:border-0
+                                      file:text-sm file:font-semibold
+                                      file:bg-purple-500 file:text-white
+                                      hover:file:bg-purple-600 transition cursor-pointer">
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit"
+                            class="flex w-full justify-center rounded-md bg-gradient-to-r from-purple-500 to-pink-500 px-3 py-2.5 text-sm font-semibold leading-6 text-white shadow-sm hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600 transition">
+                        Share Story
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

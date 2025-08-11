@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="flex flex-col h-[calc(100vh-6rem)] max-w-2xl mx-auto bg-black/50 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl overflow-hidden">
+    <!-- Header -->
+    <div class="flex-shrink-0 p-4 border-b border-white/10">
+        <div class="flex items-center">
+            <a href="{{ url_for('main.direct_inbox') }}" class="text-gray-400 hover:text-white mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+            </a>
+            <a href="{{ url_for('main.profile', username=receiver.username) }}" class="flex items-center">
+                <img src="{{ url_for('static', filename='profile_pics/' + receiver.profile_pic) }}" alt="{{ receiver.username }}" class="w-10 h-10 rounded-full object-cover">
+                <span class="ml-3 font-semibold text-white">{{ receiver.username }}</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Messages Area (Scrollable) -->
+    <div id="message-list" class="flex-1 p-4 overflow-y-auto space-y-4">
+        {% for message in messages %}
+            <div class="flex items-end gap-2 {% if message.sender_id == current_user.id %} justify-end {% else %} justify-start {% endif %}">
+                {% if message.sender_id != current_user.id %}
+                <img src="{{ url_for('static', filename='profile_pics/' + message.sender.profile_pic) }}" class="h-8 w-8 rounded-full object-cover">
+                {% endif %}
+                <div class="max-w-xs md:max-w-md p-3 rounded-2xl {% if message.sender_id == current_user.id %} bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-br-lg {% else %} bg-gray-700 text-gray-200 rounded-bl-lg {% endif %}">
+                    <p class="text-sm">{{ message.text }}</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Message Input Form -->
+    <div class="flex-shrink-0 p-4 border-t border-white/10">
+        <form id="message-form" action="{{ url_for('main.messages', username=receiver.username) }}" method="POST" class="flex items-center">
+            <input type="text" name="message_text" id="message-text-input" placeholder="Type a message..." required autocomplete="off"
+                   class="block w-full rounded-full border-0 py-2.5 pl-4 pr-12 bg-gray-700 text-white shadow-sm ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-purple-500 sm:text-sm sm:leading-6 transition">
+            <button type="submit" class="p-2 -ml-10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-400 hover:text-purple-300" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.428A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                </svg>
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const messageList = document.getElementById('message-list');
+    const messageForm = document.getElementById('message-form');
+    const messageInput = document.getElementById('message-text-input');
+
+    // Scroll to the bottom of the message list on page load
+    if (messageList) {
+        messageList.scrollTop = messageList.scrollHeight;
+    }
+
+    if (messageForm) {
+        messageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const messageText = messageInput.value.trim();
+            if (!messageText) return;
+
+            fetch(this.action, {
+                method: 'POST',
+                body: new FormData(this)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Create the new message element
+                    const newMessage = document.createElement('div');
+                    newMessage.className = 'flex items-end gap-2 justify-end';
+                    newMessage.innerHTML = `
+                        <div class="max-w-xs md:max-w-md p-3 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-br-lg">
+                            <p class="text-sm">${messageText}</p>
+                        </div>
+                    `;
+                    messageList.appendChild(newMessage);
+                    messageInput.value = ''; // Clear input
+                    messageList.scrollTop = messageList.scrollHeight; // Scroll to bottom
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    }
+});
+</script>
+{% endblock %}

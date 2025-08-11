@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="px-4 sm:px-0">
+        <div class="flex items-center space-x-8 md:space-x-16">
+            <div class="flex-shrink-0">
+                <img class="h-24 w-24 md:h-36 md:w-36 rounded-full object-cover ring-4 ring-white/10"
+                     src="{{ url_for('static', filename='profile_pics/' + user.profile_pic) }}"
+                     alt="{{ user.username }}'s profile picture">
+            </div>
+            <div class="space-y-4">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-2xl md:text-3xl font-light text-gray-200">{{ user.username }}</h1>
+                    {% if user == current_user %}
+                        <button id="edit-profile-button" class="rounded-md bg-white/10 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-white/20">Edit Profile</button>
+                    {% else %}
+                        <div class="flex items-center space-x-2">
+                            {% if current_user.is_following(user) %}
+                                <form action="{{ url_for('main.unfollow', username=user.username) }}" method="POST">
+                                    <button type="submit" class="rounded-md bg-gray-500 px-4 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-600 transition">Unfollow</button>
+                                </form>
+                            {% else %}
+                                <form action="{{ url_for('main.follow', username=user.username) }}" method="POST">
+                                    <button type="submit" class="rounded-md bg-blue-500 px-4 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 transition">Follow</button>
+                                </form>
+                            {% endif %}
+                            <a href="{{ url_for('main.messages', username=user.username) }}" class="rounded-md bg-white/10 px-4 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-white/20 transition">Message</a>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="flex items-center space-x-8 text-sm">
+                    <p><span class="font-bold text-white">{{ posts|length }}</span> posts</p>
+                    <button class="follow-list-button" data-url="{{ url_for('main.get_followers', username=user.username) }}" data-title="Followers">
+                        <span class="font-bold text-white">{{ user.followers.count() }}</span> followers
+                    </button>
+                    <button class="follow-list-button" data-url="{{ url_for('main.get_following', username=user.username) }}" data-title="Following">
+                        <span class="font-bold text-white">{{ user.followed.count() }}</span> following
+                    </button>
+                </div>
+                <div>
+                    <p class="font-bold text-white">{{ user.username }}</p>
+                    <p class="text-gray-400">{{ user.bio or 'No bio yet.' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-12 border-t border-white/10">
+        <div class="flex justify-center border-b border-white/10">
+            <a href="#" class="px-4 py-2 text-sm font-semibold text-white border-t-2 border-white">
+                <svg class="inline-block h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                POSTS
+            </a>
+        </div>
+    </div>
+
+    <div class="mt-6 grid grid-cols-3 gap-1 md:gap-4">
+        {% for post in posts %}
+        <div class="group relative aspect-square">
+            {% set file_extension = post.filename.rsplit('.', 1)[1].lower() %}
+            <a href="{{ url_for('main.post_detail', post_id=post.id) }}">
+                {% if file_extension in ['mp4', 'mov', 'avi'] %}
+                    <video class="w-full h-full object-cover rounded-md">
+                        <source src="{{ url_for('static', filename='uploads/' + post.filename) }}#t=0.1" type="video/mp4">
+                    </video>
+                    <div class="absolute top-2 right-2 text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>
+                    </div>
+                {% else %}
+                    <img src="{{ url_for('static', filename='uploads/' + post.filename) }}" class="w-full h-full object-cover rounded-md" alt="Post by {{ post.author.username }}">
+                {% endif %}
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div id="edit-profile-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 hidden">
+    <div class="bg-black/50 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-8 w-full max-w-md">
+        <h2 class="text-xl font-bold text-white mb-6 text-center">Edit Profile</h2>
+        <form action="{{ url_for('main.update_profile_pic') }}" method="POST" enctype="multipart/form-data" class="space-y-4 mb-6">
+            <div class="flex items-center space-x-4">
+                <img class="h-16 w-16 rounded-full object-cover" src="{{ url_for('static', filename='profile_pics/' + user.profile_pic) }}" alt="Current profile picture">
+                <div>
+                    <label for="profile_pic" class="block text-sm font-medium text-gray-300">Update Profile Picture</label>
+                    <input id="profile_pic" name="profile_pic" type="file" class="mt-1 text-sm text-gray-400 file:mr-4 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-500 file:text-white hover:file:bg-purple-600">
+                </div>
+            </div>
+            <button type="submit" class="w-full justify-center rounded-md bg-white/10 px-3 py-2 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-white/20 transition">Save Picture</button>
+        </form>
+        <form action="{{ url_for('main.update_bio') }}" method="POST" class="space-y-4">
+            <div>
+                <label for="bio" class="block text-sm font-medium leading-6 text-gray-300">Bio</label>
+                <div class="mt-2">
+                    <textarea id="bio" name="bio" rows="3" class="block w-full rounded-md border-0 py-2.5 px-3 bg-white/5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-purple-500 sm:text-sm sm:leading-6 transition">{{ user.bio }}</textarea>
+                </div>
+            </div>
+            <button type="submit" class="w-full justify-center rounded-md bg-white/10 px-3 py-2 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-white/20 transition">Save Bio</button>
+        </form>
+        <button id="close-edit-modal-button" class="mt-6 w-full justify-center rounded-md bg-red-500/80 px-3 py-2 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-red-500/100 transition">Cancel</button>
+    </div>
+</div>
+
+<div id="follow-list-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 hidden">
+    <div class="bg-black/50 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl w-full max-w-md flex flex-col max-h-[70vh]">
+        <div class="flex items-center justify-between p-4 border-b border-white/10">
+            <h2 id="follow-list-title" class="text-lg font-bold text-white"></h2>
+            <button id="close-follow-modal-button">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400 hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+        <div id="follow-list-content" class="p-4 overflow-y-auto">
+            </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // JavaScript to handle the Edit Profile modal
+    const editProfileButton = document.getElementById('edit-profile-button');
+    const editProfileModal = document.getElementById('edit-profile-modal');
+    const closeEditProfileModalButton = document.getElementById('close-edit-modal-button');
+
+    if(editProfileButton) {
+        editProfileButton.addEventListener('click', () => editProfileModal.classList.remove('hidden'));
+    }
+    if(closeEditProfileModalButton) {
+        closeEditProfileModalButton.addEventListener('click', () => editProfileModal.classList.add('hidden'));
+    }
+
+    // JavaScript to handle the Followers/Following modal
+    const followListButtons = document.querySelectorAll('.follow-list-button');
+    const followListModal = document.getElementById('follow-list-modal');
+    const closeFollowModalButton = document.getElementById('close-follow-modal-button');
+    const followListTitle = document.getElementById('follow-list-title');
+    const followListContent = document.getElementById('follow-list-content');
+
+    followListButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const url = this.dataset.url;
+            const title = this.dataset.title;
+            
+            followListTitle.textContent = title;
+            followListContent.innerHTML = '<p class="text-gray-400">Loading...</p>'; // Show loading state
+            followListModal.classList.remove('hidden');
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    followListContent.innerHTML = ''; // Clear loading state
+                    if (data.length > 0) {
+                        data.forEach(user => {
+                            const userElement = document.createElement('a');
+                            userElement.href = `/profile/${user.username}`;
+                            userElement.className = 'flex items-center space-x-3 p-2 hover:bg-white/10 rounded-lg';
+                            userElement.innerHTML = `
+                                <img src="${user.profile_pic}" alt="${user.username}" class="w-10 h-10 rounded-full object-cover">
+                                <span class="font-semibold text-white">${user.username}</span>
+                            `;
+                            followListContent.appendChild(userElement);
+                        });
+                    } else {
+                        followListContent.innerHTML = `<p class="text-gray-400">No users to show.</p>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching follow list:', error);
+                    followListContent.innerHTML = `<p class="text-red-400">Could not load list.</p>`;
+                });
+        });
+    });
+
+    if(closeFollowModalButton) {
+        closeFollowModalButton.addEventListener('click', () => followListModal.classList.add('hidden'));
+    }
+</script>
+{% endblock %}
